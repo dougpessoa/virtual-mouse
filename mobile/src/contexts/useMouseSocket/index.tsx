@@ -164,10 +164,8 @@ const useMouseSocket = () => useContext(MouseSocketContext);
 
 function defaultWsUrl() {
   // wss://virtual-mouse-269q.onrender.com/client
-	if (typeof window === "undefined") return "wss://virtual-mouse-269q.onrender.com/client";
-	const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-	const hostname = window.location.hostname || "localhost";
-	return `${protocol}//${hostname}:8080/client`;
+	return "wss://virtual-mouse-269q.onrender.com/client";
+
 }
 
 export { MouseSocketProvider, MouseSocketContext, useMouseSocket };
