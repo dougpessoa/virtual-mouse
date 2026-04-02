@@ -9,6 +9,16 @@ type Role = "client" | "host"
 const PORT = normalizePort(process.env.PORT) ?? 8080
 
 const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "*")
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   if (req.url === "/health") {
     res.writeHead(200, { "content-type": "application/json" })
     res.end(JSON.stringify({ ok: true }))
@@ -20,6 +30,10 @@ const server = http.createServer((req: http.IncomingMessage, res: http.ServerRes
 })
 
 const wss = new WebSocketServer({ noServer: true })
+wss.on("headers", (headers) => {
+  headers.push("Access-Control-Allow-Origin: *")
+  headers.push("Access-Control-Allow-Headers: *")
+})
 
 let hostSocket: WebSocket | null = null
 const clientSockets = new Set<WebSocket>()
