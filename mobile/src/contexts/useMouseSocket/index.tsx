@@ -51,7 +51,7 @@ function MouseSocketProvider({ children }: { children: React.ReactNode }) {
 
 	const connect = useCallback(
 		(nextUrl?: string) => {
-			const targetUrl = (nextUrl || url).trim();
+			const targetUrl = (nextUrl || url ).trim();
 			setUrl(targetUrl);
 			setError(null);
 			setStatus("connecting");

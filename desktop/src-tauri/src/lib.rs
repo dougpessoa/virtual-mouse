@@ -119,13 +119,16 @@ pub fn run() {
                         return;
                     }
 
+                    eprintln!("connecting to ws: {}", ws_url);
                     let (mut socket, _) = match tungstenite::connect(ws_url.as_str()) {
                         Ok(value) => value,
-                        Err(_) => {
+                        Err(err) => {
+                            eprintln!("ws connect error: {err}");
                             std::thread::sleep(Duration::from_secs(1));
                             continue;
                         }
                     };
+                    eprintln!("ws connected");
 
                     loop {
                         if exit_for_ws.load(Ordering::SeqCst) {
@@ -135,7 +138,10 @@ pub fn run() {
 
                         let message = match socket.read() {
                             Ok(message) => message,
-                            Err(_) => break,
+                            Err(err) => {
+                                eprintln!("ws read error: {err}");
+                                break;
+                            }
                         };
 
                         println!("{:?}", message);
