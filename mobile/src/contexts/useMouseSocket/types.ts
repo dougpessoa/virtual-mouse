@@ -13,5 +13,5 @@ export type MouseSocketContextTypes = {
 	sendMove: (x: number, y: number) => void;
 	sendScroll: (y: number) => void;
 	sendClick: (button: ClickButton, pressQty?: number) => void;
+	sendKeyboard: (key: string) => void;
 };
-

@@ -18,8 +18,8 @@ type MoveData = {
 };
 
 type Message = {
-	type: "click" | "right-click" | "scroll" | "move";
-	data: ClickData | ScrollData | MoveData;
+	type: "click" | "right-click" | "scroll" | "move" | "keyboard";
+	data: ClickData | ScrollData | MoveData | string;
 };
 
 const MouseSocketContext = createContext<MouseSocketContextTypes>({} as MouseSocketContextTypes);
@@ -143,6 +143,17 @@ function MouseSocketProvider({ children }: { children: React.ReactNode }) {
 		[sendMessage],
 	);
 
+	const sendKeyboard = useCallback(
+		(key: string) => {
+			if (!key) return;
+			sendMessage({
+				type: "keyboard",
+				data: key,
+			});
+		},
+		[sendMessage],
+	);
+
 	const value = useMemo<MouseSocketContextTypes>(
 		() => ({
 			status,
@@ -153,8 +164,9 @@ function MouseSocketProvider({ children }: { children: React.ReactNode }) {
 			sendMove,
 			sendScroll,
 			sendClick,
+			sendKeyboard,
 		}),
-		[connect, disconnect, error, sendClick, sendMove, sendScroll, status, url],
+		[connect, disconnect, error, sendClick, sendKeyboard, sendMove, sendScroll, status, url],
 	);
 
 	return <MouseSocketContext.Provider value={value}>{children}</MouseSocketContext.Provider>;
@@ -169,4 +181,3 @@ function defaultWsUrl() {
 }
 
 export { MouseSocketProvider, MouseSocketContext, useMouseSocket };
-

@@ -2,7 +2,7 @@ import { useMouseSocket } from "@/contexts/useMouseSocket";
 import { Mousepad } from "./mousepad";
 
 export function Home() {
-	const { status, sendMove, sendScroll, sendClick } =
+	const { status, sendMove, sendScroll, sendClick, sendKeyboard } =
 		useMouseSocket();
 
 	const connected = status === "connected";
@@ -15,6 +15,7 @@ export function Home() {
 				onScroll={(y) => sendScroll(y)}
 				onLeftClick={() => sendClick("left", 1)}
 				onRightClick={() => sendClick("right", 1)}
+				onKeyboardKey={(key: string) => sendKeyboard(key)}
 			/>
 		</div>
 	);

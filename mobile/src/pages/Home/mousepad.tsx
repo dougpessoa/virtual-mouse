@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type MousepadProps = {
 	disabled: boolean;
@@ -6,11 +6,15 @@ type MousepadProps = {
 	onScroll: (y: number) => void;
 	onLeftClick: () => void;
 	onRightClick: () => void;
+	onKeyboardKey: (key: string) => void;
 };
 
-export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick }: MousepadProps) {
+export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick, onKeyboardKey }: MousepadProps) {
 	const padPointerIdRef = useRef<number | null>(null);
 	const scrollPointerIdRef = useRef<number | null>(null);
+	const keyboardInputRef = useRef<HTMLInputElement | null>(null);
+
+	const [keyboardOpen, setKeyboardOpen] = useState(false);
 
 	const lastPadPointRef = useRef<{ x: number; y: number } | null>(null);
 	const lastPadTimeRef = useRef<number | null>(null);
@@ -52,11 +56,100 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 		};
 	}, []);
 
+	useEffect(() => {
+		if (!disabled) return;
+		setKeyboardOpen(false);
+		keyboardInputRef.current?.blur();
+	}, [disabled]);
+
+	const toggleKeyboard = useCallback(() => {
+		if (disabled) return;
+
+		setKeyboardOpen((open) => {
+			const next = !open;
+			if (next) {
+				window.setTimeout(() => {
+					keyboardInputRef.current?.focus();
+				}, 0);
+			} else {
+				keyboardInputRef.current?.blur();
+			}
+			return next;
+		});
+	}, [disabled]);
+
 	return (
 		<div className="w-full h-full min-h-0 flex flex-col gap-3 p-3">
-      <div className="w-full p-3">
-        <button type="button">Keyboard</button>
-      </div>
+			<input
+				ref={keyboardInputRef}
+				className="absolute -left-[9999px] top-0 h-0 w-0 opacity-0"
+				inputMode="text"
+				autoCapitalize="none"
+				autoCorrect="on"
+				autoComplete="off"
+				spellCheck={true}
+				onKeyDown={(e) => {
+					if (disabled) return;
+
+					if (e.key === "Backspace") {
+						e.preventDefault();
+						onKeyboardKey("Backspace");
+						return;
+					}
+
+					if (e.key === "Enter") {
+						e.preventDefault();
+						onKeyboardKey("Enter");
+						return;
+					}
+
+					if (e.key === "Tab") {
+						e.preventDefault();
+						onKeyboardKey("Tab");
+						return;
+					}
+
+					if (e.key === "Escape") {
+						e.preventDefault();
+						onKeyboardKey("Escape");
+						return;
+					}
+
+					if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+						e.preventDefault();
+						onKeyboardKey(e.key);
+					}
+				}}
+				onInput={(e) => {
+					if (disabled) return;
+					const value = e.currentTarget.value;
+					if (!value) return;
+
+					for (const ch of value) {
+						onKeyboardKey(ch);
+					}
+
+					e.currentTarget.value = "";
+				}}
+			/>
+
+			<div className="w-full flex items-center justify-end">
+				<button
+					type="button"
+					className={[
+						"h-10 px-4 rounded-xl border bg-background/60",
+						"active:bg-background",
+						"touch-none select-none",
+						disabled ? "opacity-60" : "",
+					].join(" ")}
+					onPointerDown={(e) => {
+						e.preventDefault();
+						toggleKeyboard();
+					}}
+				>
+					{keyboardOpen ? "Close keyboard" : "Keyboard"}
+				</button>
+			</div>
 			<div className="min-h-0 flex-1 grid grid-cols-[1fr_64px] gap-3">
 				<div
 					className={[
