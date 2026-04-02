@@ -111,7 +111,8 @@ pub fn run() {
                 };
 
                 let ws_url = std::env::var("VIRTUALMOUSE_WS_URL")
-                    .unwrap_or_else(|_| "ws://localhost:8080/host".to_string());
+                    // wss://virtual-mouse-269q.onrender.com/host
+                    .unwrap_or_else(|_| "wss://virtual-mouse-269q.onrender.com/host".to_string());
 
                 loop {
                     if exit_for_ws.load(Ordering::SeqCst) {

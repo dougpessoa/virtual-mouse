@@ -1,6 +1,7 @@
 import { envDev } from "./env.dev";
 export type ENVTYPES = {
 	API: string;
+	WS: string;
 } | null;
 
 const isLocalhost =
@@ -15,6 +16,7 @@ let env: any = envDev;
 if (LOCAL === "prod") {
 	env = {
 		API: "",
+		WS: "",
 	};
 }
 
