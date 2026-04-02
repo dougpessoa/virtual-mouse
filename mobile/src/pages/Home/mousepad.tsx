@@ -140,7 +140,7 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 						toggleKeyboard();
 					}}
 				>
-					{keyboardOpen ? "Close keyboard" : "Keyboard"}
+					Keyboard
 				</button>
 			</div>
 			<div className="min-h-0 flex-1 grid grid-cols-[1fr_64px] gap-3">
