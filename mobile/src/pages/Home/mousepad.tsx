@@ -13,6 +13,7 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 	const scrollPointerIdRef = useRef<number | null>(null);
 
 	const lastPadPointRef = useRef<{ x: number; y: number } | null>(null);
+	const lastPadTimeRef = useRef<number | null>(null);
 	const lastScrollYRef = useRef<number | null>(null);
 
 	const pendingMoveRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -21,6 +22,8 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 	const pendingScrollPxRef = useRef<number>(0);
 
 	const sensitivity = useMemo(() => 1, []);
+	const accelCoeff = useMemo(() => 2, []);
+	const accelMax = useMemo(() => 3, []);
 	const scrollStepPx = useMemo(() => 18, []);
 
 	const flushMove = useCallback(() => {
@@ -50,8 +53,8 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 	}, []);
 
 	return (
-		<div className="w-full flex-1 flex flex-col gap-4 p-4">
-			<div className="flex-1 grid grid-cols-[1fr_72px] gap-3">
+		<div className="w-full h-full min-h-0 flex flex-col gap-3 p-3">
+			<div className="min-h-0 flex-1 grid grid-cols-[1fr_64px] gap-3">
 				<div
 					className={[
 						"w-full h-full rounded-2xl border bg-background/60",
@@ -64,15 +67,24 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 						padPointerIdRef.current = e.pointerId;
 						e.currentTarget.setPointerCapture(e.pointerId);
 						lastPadPointRef.current = { x: e.clientX, y: e.clientY };
+						lastPadTimeRef.current = performance.now();
 					}}
 					onPointerMove={(e) => {
 						if (disabled) return;
 						if (padPointerIdRef.current !== e.pointerId) return;
 						const last = lastPadPointRef.current;
 						if (!last) return;
-						const dx = (e.clientX - last.x) * sensitivity;
-						const dy = (e.clientY - last.y) * sensitivity;
+						const now = performance.now();
+						const dt = lastPadTimeRef.current == null ? 16 : Math.max(1, now - lastPadTimeRef.current);
+						const baseDx = (e.clientX - last.x) * sensitivity;
+						const baseDy = (e.clientY - last.y) * sensitivity;
+						const dist = Math.hypot(baseDx, baseDy);
+						const speed = dist / dt;
+						const factor = Math.min(accelMax, 1 + speed * accelCoeff);
+						const dx = baseDx * factor;
+						const dy = baseDy * factor;
 						lastPadPointRef.current = { x: e.clientX, y: e.clientY };
+						lastPadTimeRef.current = now;
 
 						pendingMoveRef.current = {
 							x: pendingMoveRef.current.x + dx,
@@ -84,11 +96,13 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 						if (padPointerIdRef.current !== e.pointerId) return;
 						padPointerIdRef.current = null;
 						lastPadPointRef.current = null;
+						lastPadTimeRef.current = null;
 					}}
 					onPointerCancel={(e) => {
 						if (padPointerIdRef.current !== e.pointerId) return;
 						padPointerIdRef.current = null;
 						lastPadPointRef.current = null;
+						lastPadTimeRef.current = null;
 					}}
 				/>
 
@@ -141,7 +155,7 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 				<button
 					type="button"
 					className={[
-						"h-16 rounded-2xl border bg-background/60",
+						"h-14 rounded-2xl border bg-background/60",
 						"active:bg-background",
 						"touch-none select-none",
 						disabled ? "opacity-60" : "",
@@ -158,7 +172,7 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 				<button
 					type="button"
 					className={[
-						"h-16 rounded-2xl border bg-background/60",
+						"h-14 rounded-2xl border bg-background/60",
 						"active:bg-background",
 						"touch-none select-none",
 						disabled ? "opacity-60" : "",
@@ -175,4 +189,3 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 		</div>
 	);
 }
-
