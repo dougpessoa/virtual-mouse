@@ -15,6 +15,8 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 	const keyboardInputRef = useRef<HTMLInputElement | null>(null);
 
 	const [keyboardOpen, setKeyboardOpen] = useState(false);
+	const keyboardValueRef = useRef("");
+	const [keyboardValue, setKeyboardValue] = useState("");
 
 	const lastPadPointRef = useRef<{ x: number; y: number } | null>(null);
 	const lastPadTimeRef = useRef<number | null>(null);
@@ -65,73 +67,64 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 	const toggleKeyboard = useCallback(() => {
 		if (disabled) return;
 
-		setKeyboardOpen((open) => {
-			const next = !open;
-			if (next) {
-				window.setTimeout(() => {
-					keyboardInputRef.current?.focus();
-				}, 0);
-			} else {
-				keyboardInputRef.current?.blur();
-			}
-			return next;
-		});
+		if (keyboardOpen) {
+			setKeyboardOpen(false);
+			keyboardInputRef.current?.blur();
+			return;
+		}
+
+		setKeyboardOpen(true);
+		keyboardInputRef.current?.focus({ preventScroll: true });
 	}, [disabled]);
 
 	return (
 		<div className="w-full h-full min-h-0 flex flex-col gap-3 p-3">
-			<input
-				ref={keyboardInputRef}
-				className="absolute -left-[9999px] top-0 h-0 w-0 opacity-0"
-				inputMode="text"
-				autoCapitalize="none"
-				autoCorrect="on"
-				autoComplete="off"
-				spellCheck={true}
-				onKeyDown={(e) => {
+			<form
+				className="absolute left-0 top-0 w-[1px] h-[1px] opacity-0 overflow-hidden"
+				onSubmit={(e) => {
+					e.preventDefault();
 					if (disabled) return;
-
-					if (e.key === "Backspace") {
-						e.preventDefault();
-						onKeyboardKey("Backspace");
-						return;
-					}
-
-					if (e.key === "Enter") {
-						e.preventDefault();
-						onKeyboardKey("Enter");
-						return;
-					}
-
-					if (e.key === "Tab") {
-						e.preventDefault();
-						onKeyboardKey("Tab");
-						return;
-					}
-
-					if (e.key === "Escape") {
-						e.preventDefault();
-						onKeyboardKey("Escape");
-						return;
-					}
-
-					if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
-						e.preventDefault();
-						onKeyboardKey(e.key);
-					}
+					onKeyboardKey("Enter");
+					keyboardValueRef.current = "";
+					setKeyboardValue("");
+					keyboardInputRef.current?.focus({ preventScroll: true });
 				}}
-				onInput={(e) => {
-					if (disabled) return;
-					const value = e.currentTarget.value;
-					if (!value) return;
+			>
+				<input
+					ref={keyboardInputRef}
+					inputMode="text"
+					enterKeyHint="enter"
+					autoCapitalize="none"
+					autoCorrect="on"
+					autoComplete="off"
+					spellCheck={true}
+					value={keyboardValue}
+					onChange={(e) => {
+						if (disabled) return;
+						const next = e.currentTarget.value;
+						const prev = keyboardValueRef.current;
 
-					for (const ch of value) {
-						onKeyboardKey(ch);
-					}
+						if (next.length > prev.length) {
+							const added = next.slice(prev.length);
+							for (const ch of added) {
+								onKeyboardKey(ch);
+							}
+						} else if (next.length < prev.length) {
+							const removed = prev.length - next.length;
+							for (let i = 0; i < removed; i += 1) {
+								onKeyboardKey("Backspace");
+							}
+						}
 
-					e.currentTarget.value = "";
-				}}
-			/>
+						keyboardValueRef.current = next;
+						setKeyboardValue(next.length > 256 ? "" : next);
+						if (next.length > 256) {
+							keyboardValueRef.current = "";
+						}
+					}}
+				/>
+				<button type="submit" />
+			</form>
 
 			<div className="w-full flex items-center justify-end">
 				<button
