@@ -54,6 +54,9 @@ export function Mousepad({ disabled, onMove, onScroll, onLeftClick, onRightClick
 
 	return (
 		<div className="w-full h-full min-h-0 flex flex-col gap-3 p-3">
+      <div className="w-full p-3">
+        <button type="button">Keyboard</button>
+      </div>
 			<div className="min-h-0 flex-1 grid grid-cols-[1fr_64px] gap-3">
 				<div
 					className={[

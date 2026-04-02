@@ -174,6 +174,11 @@ function parseMessage(raw: WebSocket.RawData): Message | null {
     return value as Message
   }
 
+   if (type === "keyboard") {
+    if (typeof data !== "string") return null
+    return value as Message
+  }
+
   return null
 }
 

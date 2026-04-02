@@ -10,7 +10,9 @@ export type MoveData = {
   y: number
 }
 
+export type KeyboardData = string
+
 export type Message = {
-  type: "click" | "right-click" | "scroll" | "move",
-  data: ClickData | ScrollData | MoveData
+  type: "click" | "right-click" | "scroll" | "move" | "keyboard"
+  data: ClickData | ScrollData | MoveData | KeyboardData
 }

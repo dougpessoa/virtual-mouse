@@ -4,7 +4,7 @@ use std::sync::{
 };
 use std::time::Duration;
 
-use enigo::{Axis, Button, Coordinate, Direction, Mouse};
+use enigo::{Axis, Button, Coordinate, Direction, Key, Keyboard, Mouse};
 use serde::Deserialize;
 use tauri::{Emitter, Manager};
 use tungstenite::Message as WsMessage;
@@ -49,6 +49,8 @@ enum BackendMessage {
     Scroll(BackendScrollData),
     #[serde(rename = "move")]
     Move(BackendMoveData),
+    #[serde(rename = "keyboard")]
+    Keyboard(String),
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -279,6 +281,18 @@ fn handle_backend_message(enigo: &mut enigo::Enigo, message: BackendMessage) {
         BackendMessage::RightClick(data) => {
             click_n(enigo, Button::Right, data.press_qty);
         }
+        BackendMessage::Keyboard(value) => {
+            if let Some(key) = parse_special_key(&value) {
+                if let Err(err) = enigo.key(key, Direction::Click) {
+                    eprintln!("key click error: {err}");
+                }
+                return;
+            }
+
+            if let Err(err) = enigo.text(&value) {
+                eprintln!("text error: {err}");
+            }
+        }
     }
 }
 
@@ -288,5 +302,20 @@ fn click_n(enigo: &mut enigo::Enigo, button: Button, press_qty: u32) {
         if let Err(err) = enigo.button(button, Direction::Click) {
             eprintln!("button click error: {err}");
         }
+    }
+}
+
+fn parse_special_key(value: &str) -> Option<Key> {
+    match value {
+        "Enter" | "\n" => Some(Key::Return),
+        "Backspace" => Some(Key::Backspace),
+        "Tab" | "\t" => Some(Key::Tab),
+        "Escape" | "Esc" => Some(Key::Escape),
+        "Space" => Some(Key::Space),
+        "ArrowUp" => Some(Key::UpArrow),
+        "ArrowDown" => Some(Key::DownArrow),
+        "ArrowLeft" => Some(Key::LeftArrow),
+        "ArrowRight" => Some(Key::RightArrow),
+        _ => None,
     }
 }
